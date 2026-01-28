@@ -73,7 +73,9 @@ do_mount_root() {
   modprobe iso9660 2>/dev/null
   modprobe usb-storage 2>/dev/null || true
   modprobe sr_mod 2>/dev/null || true
-
+  modprobe -q xhci_hcd || true
+  modprobe -q ehci_hcd || true
+  modprobe -q uhci_hcd || true
   mkdir -p /.root /mnt /squash /cow/mod /cow/buffer
 
   # Ensure loop device
@@ -157,10 +159,11 @@ for p in /sbin/udevd /usr/sbin/udevd /lib/udev/udevd /usr/lib/udev/udevd; do
   [ -x "$p" ] && UDEVD="$p" && break
 done
 [ -z "$UDEVD" ] && { log_msg "udevd not found"; problem; }
-
+udevadm trigger --action=add
 $UDEVD --daemon --resolve-names=never
 udevadm trigger
 udevadm settle --timeout=30
+
 log_msg "udev ready"
 
 # Apply rootdelay
